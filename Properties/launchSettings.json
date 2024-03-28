@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "dotnet_csharp_graphdocs": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7277",
+      "launchBrowser": false
+    }
+  }
+}
