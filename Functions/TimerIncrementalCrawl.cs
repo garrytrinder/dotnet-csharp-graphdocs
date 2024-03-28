@@ -2,7 +2,7 @@ using System;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
-namespace dotnet_csharp_graphdocs.Functions
+namespace GraphDocsConnector.Functions
 {
     public class TimerIncrementalCrawl
     {

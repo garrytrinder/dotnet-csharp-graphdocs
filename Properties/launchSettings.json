@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "dotnet_csharp_graphdocs": {
+    "GraphDocsConnector": {
       "commandName": "Project",
       "commandLineArgs": "--port 7277",
       "launchBrowser": false
