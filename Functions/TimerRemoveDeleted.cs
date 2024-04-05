@@ -1,4 +1,5 @@
-using System;
+using Azure.Storage.Queues;
+using GraphDocsConnector.Messages;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
@@ -7,21 +8,19 @@ namespace GraphDocsConnector.Functions
     public class TimerRemoveDeleted
     {
         private readonly ILogger _logger;
+        private readonly QueueClient _queueContentClient;
 
-        public TimerRemoveDeleted(ILoggerFactory loggerFactory)
+        public TimerRemoveDeleted(QueueClient queueClient, ILoggerFactory loggerFactory)
         {
+            _queueContentClient = queueClient;
             _logger = loggerFactory.CreateLogger<TimerRemoveDeleted>();
         }
 
         [Function("TimerRemoveDeleted")]
-        public void Run([TimerTrigger("10 * * * *")] TimerInfo myTimer)
+        public async Task Run([TimerTrigger("10 * * * *")] TimerInfo myTimer)
         {
-            _logger.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
-            
-            if (myTimer.ScheduleStatus is not null)
-            {
-                _logger.LogInformation($"Next timer schedule at: {myTimer.ScheduleStatus.Next}");
-            }
+            _logger.LogInformation("Enqueueing request for incremental crawl...");
+            await Queue.StartCrawl(_queueContentClient, CrawlType.Incremental);
         }
     }
 }
