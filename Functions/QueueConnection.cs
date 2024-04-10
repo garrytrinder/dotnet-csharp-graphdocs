@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text.Json;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
@@ -35,14 +34,11 @@ namespace GraphDocsConnector.Functions
                 return;
             }
 
-            Debug.Assert(connectionMessage.ConnectorId is not null);
-            Debug.Assert(connectionMessage.ConnectorTicket is not null);
-
             switch (connectionMessage.Action)
             {
                 case ConnectionMessageAction.Create:
                     _logger.LogInformation("Creating connection...");
-                    await CreateConnection(connectionMessage.ConnectorTicket);
+                    await CreateConnection(connectionMessage.ConnectorTicket!);
                     _logger.LogInformation("Connection created");
                     _logger.LogInformation("Submitting schema for provisioning...");
                     await CreateSchema();

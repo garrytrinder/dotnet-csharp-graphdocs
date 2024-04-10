@@ -1,24 +1,41 @@
 using System.Diagnostics;
 using System.Text.Json;
+using Azure.Data.Tables;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
 using GraphDocsConnector.Messages;
+using Markdig;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
+using Microsoft.Graph.Models.ExternalConnectors;
+using YamlDotNet.Serialization;
 
 namespace GraphDocsConnector.Functions
 {
+    class DocsArticle : IMarkdown
+    {
+        [YamlMember(Alias = "title")]
+        public string? Title { get; set; }
+        [YamlMember(Alias = "description")]
+        public string? Description { get; set; }
+        public string? Markdown { get; set; }
+        public string? Content { get; set; }
+        public string? RelativePath { get; set; }
+    }
+
     public class QueueContent
     {
         private readonly ILogger<QueueContent> _logger;
         private readonly GraphServiceClient _graphClient;
         private readonly QueueClient _queueContentClient;
+        private readonly TableClient _tableClient;
 
-        public QueueContent(GraphServiceClient graphServiceClient, QueueClient queueClient, ILogger<QueueContent> logger)
+        public QueueContent(GraphServiceClient graphServiceClient, QueueServiceClient queueClient, TableServiceClient tableClient, ILogger<QueueContent> logger)
         {
             _graphClient = graphServiceClient;
-            _queueContentClient = queueClient;
+            _queueContentClient = queueClient.GetQueueClient("queue-content");
+            _tableClient = tableClient.GetTableClient("externalitems");
             _logger = logger;
         }
 
@@ -72,14 +89,101 @@ namespace GraphDocsConnector.Functions
 
         private async Task DeleteItem(string itemId)
         {
-            // TODO
-            throw new NotImplementedException();
+            _logger.LogInformation($"Deleting item {itemId}...");
+            await _graphClient.External
+                .Connections[ConnectionConfiguration.ExternalConnection.Id]
+                .Items[itemId]
+                .DeleteAsync();
         }
 
         private async Task UpdateItem(string itemId)
         {
-            // TODO
-            throw new NotImplementedException();
+            var url = $"{Environment.GetEnvironmentVariable("DOCUMENTS_API")}/documents/{itemId}";
+
+            _logger.LogInformation($"Retrieving item from {url}...");
+
+            FileInfo? file = null;
+
+            // TODO: add auth
+            using (var httpClient = Utils.GetHttpClient())
+            {
+                try
+                {
+                    var res = await httpClient.GetStringAsync(url);
+                    file = JsonSerializer.Deserialize<FileInfo>(res, Utils.JsonSerializerOptions);
+                    if (file is null)
+                    {
+                        _logger.LogWarning("Received null response");
+                        return;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "An error has occurred while retrieving items");
+                    return;
+                }
+            }
+
+            _logger.LogInformation($"Retrieved item from {url}");
+            _logger.LogInformation(JsonSerializer.Serialize(file));
+
+            if (file.Id is null)
+            {
+                _logger.LogWarning("File ID is null");
+                return;
+            }
+
+            if (file.Contents is null)
+            {
+                _logger.LogWarning("File has no content");
+                return;
+            }
+
+            var baseUrl = new Uri("https://learn.microsoft.com/graph/");
+
+            var doc = file.Contents.GetContents<DocsArticle>();
+            doc.Content = Markdown.ToHtml(doc.Markdown ?? "");
+
+            var externalItem = new ExternalItem
+            {
+                Id = file.Id,
+                Properties = new()
+                {
+                    AdditionalData = new Dictionary<string, object>
+                    {
+                        { "title", doc.Title ?? "" },
+                        { "description", doc.Description ?? "" },
+                        { "url", new Uri(baseUrl, file.Id.Replace("__", "/").Replace(".md", "")).ToString() }
+                    }
+                },
+                Content = new()
+                {
+                    Value = doc.Content ?? "",
+                    Type = ExternalItemContentType.Html
+                },
+                Acl = new()
+                {
+                    new()
+                    {
+                        Type = AclType.Everyone,
+                        Value = "everyone",
+                        AccessType = AccessType.Grant
+                    }
+                }
+            };
+
+            _logger.LogInformation($"Loading item {externalItem.Id}...");
+            await _graphClient.External
+                .Connections[ConnectionConfiguration.ExternalConnection.Id]
+                .Items[externalItem.Id]
+                .PutAsync(externalItem);
+
+            _logger.LogInformation($"Adding item {externalItem.Id} to table storage...");
+            Table.AddItem(_tableClient, externalItem.Id);
+
+            _logger.LogInformation($"Tracking last modified date {file.LastModified}...");
+            Table.RecordLastModified(_tableClient, file.LastModified, _logger);
         }
 
         private async Task Crawl(CrawlType? crawlType)
@@ -110,8 +214,47 @@ namespace GraphDocsConnector.Functions
 
         private async Task CrawlFullOrIncremental(CrawlType? crawlType)
         {
-            // TODO
-            throw new NotImplementedException();
+            var url = $"{Environment.GetEnvironmentVariable("DOCUMENTS_API")}/documents";
+
+            //if (crawlType == CrawlType.Incremental)
+            //{
+            //    var lastModified = await getLastModified(context);
+            //    url += $"?$filter = lastModified gt {lastModified}";
+            //}
+
+            _logger.LogInformation($"Retrieving items from {url}...");
+
+            // TODO: add auth
+            using (var httpClient = Utils.GetHttpClient())
+            {
+                try
+                {
+                    var res = await httpClient.GetStringAsync(url);
+                    var files = JsonSerializer.Deserialize<FileInfo[]>(res, Utils.JsonSerializerOptions);
+                    if (files is null)
+                    {
+                        _logger.LogWarning("Received null response");
+                        return;
+                    }
+
+                    _logger.LogInformation($"Retrieved {files.Length} items from {url}");
+                    foreach (var file in files)
+                    {
+                        if (file.Id is null)
+                        {
+                            _logger.LogWarning($"ID is null. Skipping...");
+                            continue;
+                        }
+
+                        _logger.LogInformation($"Enqueueing item update for {file.Id}...");
+                        Queue.EnqueueItemUpdate(_queueContentClient, file.Id);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "An error has occurred while retrieving items");
+                }
+            }
         }
     }
 }

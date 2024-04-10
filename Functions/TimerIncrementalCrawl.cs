@@ -10,9 +10,9 @@ namespace GraphDocsConnector.Functions
         private readonly ILogger _logger;
         private readonly QueueClient _queueContentClient;
 
-        public TimerIncrementalCrawl(QueueClient queueClient, ILoggerFactory loggerFactory)
+        public TimerIncrementalCrawl(QueueServiceClient queueClient, ILoggerFactory loggerFactory)
         {
-            _queueContentClient = queueClient;
+            _queueContentClient = queueClient.GetQueueClient("queue-content");
             _logger = loggerFactory.CreateLogger<TimerIncrementalCrawl>();
         }
 
@@ -20,6 +20,7 @@ namespace GraphDocsConnector.Functions
         public async Task Run([TimerTrigger("0 * * * *")] TimerInfo myTimer)
         {
             _logger.LogInformation("Enqueueing request for incremental crawl...");
+            await _queueContentClient.CreateIfNotExistsAsync();
             await Queue.StartCrawl(_queueContentClient, CrawlType.Incremental);
         }
     }

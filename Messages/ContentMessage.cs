@@ -1,6 +1,6 @@
 ﻿namespace GraphDocsConnector.Messages
 {
-    internal enum CrawlType
+    public enum CrawlType
     {
         Full,
         Incremental,

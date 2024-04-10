@@ -35,12 +35,25 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
 		</None>
+		<None Update="resultLayout.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<Content Include="content\**\*.*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
+	  <Content Include=".devproxy\documents-api.json" />
+	  <Content Include=".devproxy\entra-mocks.json" />
+	  <Content Include=".devproxy\graph-connector-mocks.json" />
+	  <Content Include=".devproxy\graph-connector-notification-disabled.json" />
+	  <Content Include=".devproxy\graph-connector-notification-enabled.json" />
+	</ItemGroup>
+	<ItemGroup>
 		<Using Include="System.Threading.ExecutionContext" Alias="ExecutionContext" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include=".devproxy\documents.json" />
 	</ItemGroup>
 	<ProjectExtensions>
 		<VisualStudio>

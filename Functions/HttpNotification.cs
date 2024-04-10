@@ -86,7 +86,7 @@ namespace GraphDocsConnector.Functions
                     return;
             }
 
-            await _queueClient.CreateAsync();
+            await _queueClient.CreateIfNotExistsAsync();
             await _queueClient.SendMessageAsync(JsonSerializer.Serialize(message));
         }
     }

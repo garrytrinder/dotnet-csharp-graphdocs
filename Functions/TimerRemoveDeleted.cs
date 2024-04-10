@@ -10,17 +10,18 @@ namespace GraphDocsConnector.Functions
         private readonly ILogger _logger;
         private readonly QueueClient _queueContentClient;
 
-        public TimerRemoveDeleted(QueueClient queueClient, ILoggerFactory loggerFactory)
+        public TimerRemoveDeleted(QueueServiceClient queueClient, ILoggerFactory loggerFactory)
         {
-            _queueContentClient = queueClient;
+            _queueContentClient = queueClient.GetQueueClient("queue-content");
             _logger = loggerFactory.CreateLogger<TimerRemoveDeleted>();
         }
 
         [Function("TimerRemoveDeleted")]
         public async Task Run([TimerTrigger("10 * * * *")] TimerInfo myTimer)
         {
-            _logger.LogInformation("Enqueueing request for incremental crawl...");
-            await Queue.StartCrawl(_queueContentClient, CrawlType.Incremental);
+            _logger.LogInformation("Enqueueing request for removing deleted items...");
+            await _queueContentClient.CreateIfNotExistsAsync();
+            await Queue.StartCrawl(_queueContentClient, CrawlType.RemoveDeleted);
         }
     }
 }

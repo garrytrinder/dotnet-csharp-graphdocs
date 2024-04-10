@@ -1,16 +1,33 @@
 ﻿using System.Net;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace GraphDocsConnector
 {
     internal class Utils
     {
-        public static HttpClient GetHttpClient()
+        private static readonly JsonSerializerOptions jsonSerializerOptions = new()
         {
-            var handler = new HttpClientHandler
+            AllowTrailingCommas = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            ReadCommentHandling = JsonCommentHandling.Skip,
+            WriteIndented = true
+        };
+        public static JsonSerializerOptions JsonSerializerOptions => jsonSerializerOptions;
+
+        public static HttpClientHandler GetHttpClientHandler()
+        {
+            return new HttpClientHandler
             {
                 Proxy = GetWebProxy()
             };
-            return new HttpClient(handler);
+        }
+
+        public static HttpClient GetHttpClient()
+        {
+            return new HttpClient(GetHttpClientHandler());
         }
 
         public static IWebProxy? GetWebProxy()

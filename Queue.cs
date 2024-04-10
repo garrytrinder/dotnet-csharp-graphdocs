@@ -6,7 +6,7 @@ namespace GraphDocsConnector
 {
     internal static class Queue
     {
-        public static async Task EnqueueCheckStatus(QueueClient queueClient, string location)
+        public static void EnqueueCheckStatus(QueueClient queueClient, string location)
         {
             var message = new ConnectionMessage
             {
@@ -14,15 +14,34 @@ namespace GraphDocsConnector
                 Location = location
             };
 
-            await queueClient.SendMessageAsync(
+            queueClient.CreateIfNotExists();
+            queueClient.SendMessage(
                 JsonSerializer.Serialize(message),
                 TimeSpan.FromSeconds(int.Parse(Environment.GetEnvironmentVariable("GRAPH_SCHEMA_STATUS_INTERVAL") ?? "60"))
             );
         }
 
-        public static async Task StartCrawl(QueueClient queueClient, CrawlType crawlType)
+        public static void StartCrawl(QueueClient queueClient, CrawlType crawlType)
         {
-            throw new NotImplementedException();
+            var message = new ContentMessage
+            {
+                Action = ContentAction.Crawl,
+                CrawlType = crawlType
+            };
+            queueClient.CreateIfNotExists();
+            queueClient.SendMessage(JsonSerializer.Serialize(message));
+        }
+
+        public static void EnqueueItemUpdate(QueueClient queueClient, string itemId)
+        {
+            var message = new ContentMessage
+            {
+                Action = ContentAction.Item,
+                ItemAction = ItemAction.Update,
+                ItemId = itemId
+            };
+            queueClient.CreateIfNotExists();
+            queueClient.SendMessage(JsonSerializer.Serialize(message));
         }
     }
 }

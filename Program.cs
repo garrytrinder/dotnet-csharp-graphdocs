@@ -1,3 +1,4 @@
+using Azure.Core.Pipeline;
 using Azure.Identity;
 using Azure.Storage.Queues;
 using GraphDocsConnector;
@@ -25,11 +26,17 @@ var host = new HostBuilder()
         s.ConfigureFunctionsApplicationInsights();
         s.AddSingleton(s =>
         {
-            var clientId = config["AzureAd:ClientId"];
-            var clientSecret = config["AzureAd:ClientSecret"];
-            var tenantId = config["AzureAd:TenantId"];
+            var handler = Utils.GetHttpClientHandler();
+            var options = new ClientSecretCredentialOptions
+            {
+                Transport = new HttpClientTransport(handler)
+            };
 
-            var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+            var clientId = config["Entra:ClientId"];
+            var clientSecret = config["Entra:ClientSecret"];
+            var tenantId = config["Entra:TenantId"];
+
+            var credential = new ClientSecretCredential(tenantId, clientId, clientSecret, options);
             var handlers = GraphClientFactory.CreateDefaultHandlers();
             var httpClient = GraphClientFactory.Create(handlers, proxy: Utils.GetWebProxy());
 
