@@ -24,7 +24,7 @@ namespace GraphDocsConnector.Functions
         }
 
         [Function("crawl")]
-        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req, [FromBody] CrawlRequest crawlRequest)
+        public IActionResult Run([HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req, [FromBody] CrawlRequest crawlRequest)
         {
             if (crawlRequest.CrawlType is null)
             {
@@ -32,7 +32,7 @@ namespace GraphDocsConnector.Functions
             }
 
             _logger.LogInformation($"Enqueuing crawl request for {crawlRequest.CrawlType}...");
-            await Queue.StartCrawl(_queueContentClient, crawlRequest.CrawlType.Value);
+            Queue.StartCrawl(_queueContentClient, crawlRequest.CrawlType.Value);
 
             return new AcceptedResult();
         }

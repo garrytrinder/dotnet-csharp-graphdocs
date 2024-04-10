@@ -77,10 +77,10 @@ namespace GraphDocsConnector.Functions
             switch (res.Status)
             {
                 case ConnectionOperationStatus.Inprogress:
-                    await Queue.EnqueueCheckStatus(_queueConnectionClient, location);
+                    Queue.EnqueueCheckStatus(_queueConnectionClient, location);
                     break;
                 case ConnectionOperationStatus.Completed:
-                    await Queue.StartCrawl(_queueContentClient, CrawlType.Full);
+                    Queue.StartCrawl(_queueContentClient, CrawlType.Full);
                     break;
                 default:
                     _logger.LogWarning($"Unsupported status");
@@ -120,7 +120,7 @@ namespace GraphDocsConnector.Functions
                 return;
             }
 
-            await Queue.EnqueueCheckStatus(_queueConnectionClient, location);
+            Queue.EnqueueCheckStatus(_queueConnectionClient, location);
         }
 
         private async Task DeleteConnection()

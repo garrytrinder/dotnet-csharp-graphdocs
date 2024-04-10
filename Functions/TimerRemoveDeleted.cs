@@ -17,11 +17,11 @@ namespace GraphDocsConnector.Functions
         }
 
         [Function("TimerRemoveDeleted")]
-        public async Task Run([TimerTrigger("10 * * * *")] TimerInfo myTimer)
+        public void Run([TimerTrigger("10 * * * *")] TimerInfo myTimer)
         {
             _logger.LogInformation("Enqueueing request for removing deleted items...");
-            await _queueContentClient.CreateIfNotExistsAsync();
-            await Queue.StartCrawl(_queueContentClient, CrawlType.RemoveDeleted);
+            _queueContentClient.CreateIfNotExistsAsync();
+            Queue.StartCrawl(_queueContentClient, CrawlType.RemoveDeleted);
         }
     }
 }

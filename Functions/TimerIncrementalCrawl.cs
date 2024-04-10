@@ -17,11 +17,11 @@ namespace GraphDocsConnector.Functions
         }
 
         [Function("TimerIncrementalCrawl")]
-        public async Task Run([TimerTrigger("0 * * * *")] TimerInfo myTimer)
+        public void Run([TimerTrigger("0 * * * *")] TimerInfo myTimer)
         {
             _logger.LogInformation("Enqueueing request for incremental crawl...");
-            await _queueContentClient.CreateIfNotExistsAsync();
-            await Queue.StartCrawl(_queueContentClient, CrawlType.Incremental);
+            _queueContentClient.CreateIfNotExists();
+            Queue.StartCrawl(_queueContentClient, CrawlType.Incremental);
         }
     }
 }
