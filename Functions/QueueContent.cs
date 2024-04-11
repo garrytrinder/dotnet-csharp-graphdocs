@@ -29,13 +29,15 @@ namespace GraphDocsConnector.Functions
         private readonly ILogger<QueueContent> _logger;
         private readonly GraphServiceClient _graphClient;
         private readonly QueueClient _queueContentClient;
-        private readonly TableClient _tableClient;
+        private readonly TableClient _tableExternalItemsClient;
+        private readonly TableClient _tableStateClient;
 
         public QueueContent(GraphServiceClient graphServiceClient, QueueServiceClient queueClient, TableServiceClient tableClient, ILogger<QueueContent> logger)
         {
             _graphClient = graphServiceClient;
             _queueContentClient = queueClient.GetQueueClient("queue-content");
-            _tableClient = tableClient.GetTableClient("externalitems");
+            _tableExternalItemsClient = tableClient.GetTableClient("externalitems");
+            _tableStateClient = tableClient.GetTableClient("state");
             _logger = logger;
         }
 
@@ -180,10 +182,10 @@ namespace GraphDocsConnector.Functions
                 .PutAsync(externalItem);
 
             _logger.LogInformation($"Adding item {externalItem.Id} to table storage...");
-            Table.AddItem(_tableClient, externalItem.Id);
+            Table.AddItem(_tableExternalItemsClient, externalItem.Id);
 
             _logger.LogInformation($"Tracking last modified date {file.LastModified}...");
-            Table.RecordLastModified(_tableClient, file.LastModified, _logger);
+            Table.RecordLastModified(_tableStateClient, file.LastModified, _logger);
         }
 
         private async Task Crawl(CrawlType? crawlType)

@@ -33,10 +33,12 @@ namespace GraphDocsConnector
                 return;
             }
 
-            var lastModifiedFromTable = tableClient.GetEntity<StateRecord>("state", "lastModified");
-            if (lastModifiedFromTable is not null && DateTime.Parse(lastModifiedFromTable.Value.Date) > lastModified)
+            tableClient.CreateIfNotExists();
+
+            var lastModifiedFromTable = tableClient.GetEntityIfExists<StateRecord>("state", "lastModified");
+            if (lastModifiedFromTable.HasValue && DateTime.Parse(lastModifiedFromTable.Value!.Date) >= lastModified)
             {
-                logger.LogInformation($"Last modified date {lastModifiedFromTable.Value.Date} is newer than {lastModified}");
+                logger.LogInformation($"Last modified date {lastModifiedFromTable.Value.Date} is newer than {lastModified} or equal");
                 return;
             }
 
@@ -46,7 +48,6 @@ namespace GraphDocsConnector
                 RowKey = "lastModified",
                 Date = lastModified.Value.ToString()
             };
-            tableClient.CreateIfNotExists();
             tableClient.UpsertEntity(entity);
         }
     }
