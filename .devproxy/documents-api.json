@@ -16,5 +16,9 @@
     }
   ],
   "baseUrl": "https://api.contoso.com/documents",
-  "dataFile": "documents.json"
+  "dataFile": "documents.json",
+  "auth": "entra",
+  "entraAuthConfig": {
+    "audience": "https://api.contoso.com"
+  }
 }

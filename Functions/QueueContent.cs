@@ -28,13 +28,15 @@ namespace GraphDocsConnector.Functions
     {
         private readonly ILogger<QueueContent> _logger;
         private readonly GraphServiceClient _graphClient;
+        private readonly HttpClient _documentsClient;
         private readonly QueueClient _queueContentClient;
         private readonly TableClient _tableExternalItemsClient;
         private readonly TableClient _tableStateClient;
 
-        public QueueContent(GraphServiceClient graphServiceClient, QueueServiceClient queueClient, TableServiceClient tableClient, ILogger<QueueContent> logger)
+        public QueueContent(GraphServiceClient graphServiceClient, DocumentsServiceClient documentServiceClient, QueueServiceClient queueClient, TableServiceClient tableClient, ILogger<QueueContent> logger)
         {
             _graphClient = graphServiceClient;
+            _documentsClient = documentServiceClient.Client;
             _queueContentClient = queueClient.GetQueueClient("queue-content");
             _tableExternalItemsClient = tableClient.GetTableClient("externalitems");
             _tableStateClient = tableClient.GetTableClient("state");
@@ -100,31 +102,27 @@ namespace GraphDocsConnector.Functions
 
         private async Task UpdateItem(string itemId)
         {
-            var url = $"{Environment.GetEnvironmentVariable("DOCUMENTS_API")}/documents/{itemId}";
+            var url = $"{Environment.GetEnvironmentVariable("DocumentsApi:Url")}/documents/{itemId}";
 
             _logger.LogInformation($"Retrieving item from {url}...");
 
             FileInfo? file = null;
 
-            // TODO: add auth
-            using (var httpClient = Utils.GetHttpClient())
+            try
             {
-                try
+                var res = await _documentsClient.GetStringAsync(url);
+                file = JsonSerializer.Deserialize<FileInfo>(res, Utils.JsonSerializerOptions);
+                if (file is null)
                 {
-                    var res = await httpClient.GetStringAsync(url);
-                    file = JsonSerializer.Deserialize<FileInfo>(res, Utils.JsonSerializerOptions);
-                    if (file is null)
-                    {
-                        _logger.LogWarning("Received null response");
-                        return;
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "An error has occurred while retrieving items");
+                    _logger.LogWarning("Received null response");
                     return;
                 }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error has occurred while retrieving items");
+                return;
             }
 
             _logger.LogInformation($"Retrieved item from {url}");
@@ -210,52 +208,79 @@ namespace GraphDocsConnector.Functions
 
         private async Task RemoveDeleted()
         {
-            // TODO
-            throw new NotImplementedException();
+            var url = $"{Environment.GetEnvironmentVariable("DocumentsApi:Url")}/documents";
+
+            try
+            {
+                var res = await _documentsClient.GetStringAsync(url);
+                var files = JsonSerializer.Deserialize<FileInfo[]>(res, Utils.JsonSerializerOptions);
+                if (files is null)
+                {
+                    _logger.LogWarning("Received null response");
+                    return;
+                }
+
+                _logger.LogInformation($"Retrieved {files.Length} items from {url}");
+
+                var ingestedItemIds = Table.GetItemIds(_tableExternalItemsClient);
+
+                foreach (var ingestedItemId in ingestedItemIds)
+                {
+                    if (files.Any(f => f.Id == ingestedItemId))
+                    {
+                        _logger.LogInformation($"Item {ingestedItemId} still exists, skipping...");
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"Item {ingestedItemId} no longer exists, deleting...");
+                        Queue.EnqueueItemDeletion(_queueContentClient, ingestedItemId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error has occurred while retrieving items");
+            }
         }
 
         private async Task CrawlFullOrIncremental(CrawlType? crawlType)
         {
-            var url = $"{Environment.GetEnvironmentVariable("DOCUMENTS_API")}/documents";
+            var url = $"{Environment.GetEnvironmentVariable("DocumentsApi:Url")}/documents";
 
-            //if (crawlType == CrawlType.Incremental)
-            //{
-            //    var lastModified = await getLastModified(context);
-            //    url += $"?$filter = lastModified gt {lastModified}";
-            //}
+            if (crawlType == CrawlType.Incremental)
+            {
+                var lastModified = Table.GetLastModified(_tableStateClient);
+                url += $"?$filter=lastModified gt {lastModified}";
+            }
 
             _logger.LogInformation($"Retrieving items from {url}...");
 
-            // TODO: add auth
-            using (var httpClient = Utils.GetHttpClient())
+            try
             {
-                try
+                var res = await _documentsClient.GetStringAsync(url);
+                var files = JsonSerializer.Deserialize<FileInfo[]>(res, Utils.JsonSerializerOptions);
+                if (files is null)
                 {
-                    var res = await httpClient.GetStringAsync(url);
-                    var files = JsonSerializer.Deserialize<FileInfo[]>(res, Utils.JsonSerializerOptions);
-                    if (files is null)
+                    _logger.LogWarning("Received null response");
+                    return;
+                }
+
+                _logger.LogInformation($"Retrieved {files.Length} items from {url}");
+                foreach (var file in files)
+                {
+                    if (file.Id is null)
                     {
-                        _logger.LogWarning("Received null response");
-                        return;
+                        _logger.LogWarning($"ID is null. Skipping...");
+                        continue;
                     }
 
-                    _logger.LogInformation($"Retrieved {files.Length} items from {url}");
-                    foreach (var file in files)
-                    {
-                        if (file.Id is null)
-                        {
-                            _logger.LogWarning($"ID is null. Skipping...");
-                            continue;
-                        }
-
-                        _logger.LogInformation($"Enqueueing item update for {file.Id}...");
-                        Queue.EnqueueItemUpdate(_queueContentClient, file.Id);
-                    }
+                    _logger.LogInformation($"Enqueueing item update for {file.Id}...");
+                    Queue.EnqueueItemUpdate(_queueContentClient, file.Id);
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "An error has occurred while retrieving items");
-                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error has occurred while retrieving items");
             }
         }
     }

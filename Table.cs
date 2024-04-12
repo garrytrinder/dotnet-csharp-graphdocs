@@ -1,6 +1,8 @@
 ﻿using Azure;
 using Azure.Data.Tables;
+using Markdig.Extensions.Tables;
 using Microsoft.Extensions.Logging;
+using Microsoft.Graph.Models;
 
 namespace GraphDocsConnector
 {
@@ -24,6 +26,34 @@ namespace GraphDocsConnector
             };
             tableClient.CreateIfNotExists();
             tableClient.UpsertEntity(entity);
+        }
+
+        internal static string[] GetItemIds(TableClient tableClient)
+        {
+            tableClient.CreateIfNotExists();
+
+            var entities = tableClient.Query<ITableEntity>().ToList();
+            var items = new List<string>();
+
+            foreach (var entity in entities)
+            {
+                items.Add(entity.RowKey);
+            }
+
+            return items.ToArray();
+        }
+
+        internal static DateTime? GetLastModified(TableClient tableClient)
+        {
+            tableClient.CreateIfNotExists();
+
+            var lastModifiedFromTable = tableClient.GetEntityIfExists<StateRecord>("state", "lastModified");
+            if (!lastModifiedFromTable.HasValue)
+            {
+                return null;
+            }
+
+            return DateTime.Parse(lastModifiedFromTable.Value!.Date);
         }
 
         internal static void RecordLastModified(TableClient tableClient, DateTime? lastModified, ILogger logger)

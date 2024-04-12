@@ -5,7 +5,10 @@
       "name": "CrudApiPlugin",
       "enabled": true,
       "pluginPath": "~appFolder/plugins/dev-proxy-plugins.dll",
-      "configSection": "documentsApi"
+      "configSection": "documentsApi",
+      "urlsToWatch": [
+        "https://api.contoso.com/*"
+      ]
     },
     {
       "name": "GraphConnectorGuidancePlugin",
@@ -62,7 +65,6 @@
     "mocksFile": ".devproxy/entra-mocks.json"
   },
   "urlsToWatch": [
-    "https://api.contoso.com/*",
     "https://graph.microsoft.com/*"
   ]
 }

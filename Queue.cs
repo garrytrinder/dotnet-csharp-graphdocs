@@ -43,5 +43,17 @@ namespace GraphDocsConnector
             queueClient.CreateIfNotExists();
             queueClient.SendMessage(JsonSerializer.Serialize(message));
         }
+
+        internal static void EnqueueItemDeletion(QueueClient queueClient, string itemId)
+        {
+            var message = new ContentMessage
+            {
+                Action = ContentAction.Item,
+                ItemAction = ItemAction.Delete,
+                ItemId = itemId
+            };
+            queueClient.CreateIfNotExists();
+            queueClient.SendMessage(JsonSerializer.Serialize(message));
+        }
     }
 }
