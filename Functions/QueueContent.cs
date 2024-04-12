@@ -125,8 +125,8 @@ namespace GraphDocsConnector.Functions
                 return;
             }
 
-            _logger.LogInformation($"Retrieved item from {url}");
-            _logger.LogInformation(JsonSerializer.Serialize(file));
+            _logger.LogDebug($"Retrieved item from {url}");
+            _logger.LogDebug(JsonSerializer.Serialize(file));
 
             if (file.Id is null)
             {
