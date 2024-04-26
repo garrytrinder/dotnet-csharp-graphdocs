@@ -45,15 +45,15 @@ namespace GraphDocsConnector.Functions
             Debug.Assert(tenantId is not null);
             Debug.Assert(clientId is not null);
 
-            var tokenValidator = new TokenValidator($"https://sts.windows.net/{tenantId}/", clientId);
+            var tokenValidator = new TokenValidator(tenantId, clientId);
             if (notificationMessage.ValidationTokens is null ||
                 !notificationMessage.ValidationTokens.Any())
             {
                 _logger.LogError("No token to validate found");
                 return;
             }
-
-            if (!await tokenValidator.ValidateTokenAsync(notificationMessage.ValidationTokens.First()))
+            
+            if (!tokenValidator.ValidateToken(notificationMessage.ValidationTokens.First()))
             {
                 _logger.LogError("Invalid token");
                 return;

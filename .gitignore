@@ -267,3 +267,4 @@ __pycache__/
 env/.env.local
 env/.env.local.user
 appPackage/build
+infra/entra/build

@@ -7,6 +7,40 @@ environmentFolderPath: ./env
 
 provision:
 
+  - uses: aadApp/create
+    with:
+      name: ${{APP_NAME}}-${{TEAMSFX_ENV}}
+      generateClientSecret: true
+      signInAudience: AzureADMultipleOrgs
+    writeToEnvironmentFile:
+      clientId: ENTRA_APP_CLIENT_ID
+      clientSecret: SECRET_ENTRA_APP_CLIENT_SECRET
+      objectId: ENTRA_APP_OBJECT_ID
+      tenantId: ENTRA_APP_TENANT_ID
+      authority: ENTRA_APP_OAUTH_AUTHORITY
+      authorityHost: ENTRA_APP_OAUTH_AUTHORITY_HOST
+
+  - uses: aadApp/update
+    with:
+      manifestPath: ./infra/entra/entra.manifest.json
+      outputFilePath: ./infra/entra/build/entra.manifest.${{TEAMSFX_ENV}}.json
+
+  - uses: file/createOrUpdateJsonFile
+    with:
+      target: ./local.settings.json
+      appsettings:
+        IsEncrypted: false
+        Values:
+          AzureWebJobsStorage: UseDevelopmentStorage=true
+          FUNCTIONS_WORKER_RUNTIME: dotnet-isolated
+          GRAPH_SCHEMA_STATUS_INTERVAL: 5
+          DocumentsApi:Url: "https://api.contoso.com"
+          DocumentsApi:Scopes: "https://api.contoso.com/Documents.Read"
+          Entra:TenantId: ${{ENTRA_APP_TENANT_ID}}
+          Entra:ClientId: ${{ENTRA_APP_CLIENT_ID}}
+          Entra:ClientSecret: ${{SECRET_ENTRA_APP_CLIENT_SECRET}}
+          CustomProxy: "http://127.0.0.1:8000"
+
   - uses: teamsApp/validateManifest
     with:
       manifestPath: ./appPackage/manifest.${{TEAMSFX_ENV}}.json
@@ -20,3 +54,15 @@ provision:
   - uses: teamsApp/validateAppPackage
     with:
       appPackagePath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
+
+  - uses: teamsApp/publishAppPackage
+    with:
+      appPackagePath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
+    writeToEnvironmentFile:
+      publishedAppId: TEAMS_APP_PUBLISHED_APP_ID
+
+  - uses: script
+    name: "ACTION: Publish app in TAC"
+    with:
+      shell: powershell
+      run: Write-Host "Follow -> https://admin.teams.microsoft.com/policies/manage-apps/${{TEAMS_APP_PUBLISHED_APP_ID}}"

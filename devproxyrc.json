@@ -34,12 +34,6 @@
       "configSection": "graphConnectorMocks"
     },
     {
-      "name": "MockResponsePlugin",
-      "enabled": true,
-      "pluginPath": "~appFolder/plugins/dev-proxy-plugins.dll",
-      "configSection": "tacMocks"
-    },
-    {
       "name": "EntraMockResponsePlugin",
       "enabled": true,
       "pluginPath": "~appFolder/plugins/dev-proxy-plugins.dll",
@@ -66,9 +60,6 @@
   },
   "graphConnectorMocks": {
     "mocksFile": ".devproxy/graph-connector-mocks.json"
-  },
-  "tacMocks": {
-    "mocksFile": ".devproxy/tac-mocks.json"
   },
   "entraMocks": {
     "mocksFile": ".devproxy/entra-mocks.json"

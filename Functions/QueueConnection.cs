@@ -38,7 +38,7 @@ namespace GraphDocsConnector.Functions
             {
                 case ConnectionMessageAction.Create:
                     _logger.LogInformation("Creating connection...");
-                    await CreateConnection(connectionMessage.ConnectorTicket!);
+                    await CreateConnection(connectionMessage);
                     _logger.LogInformation("Connection created");
                     _logger.LogInformation("Submitting schema for provisioning...");
                     await CreateSchema();
@@ -88,12 +88,13 @@ namespace GraphDocsConnector.Functions
             }
         }
 
-        private async Task CreateConnection(string connectorTicket)
+        private async Task CreateConnection(ConnectionMessage connectionMessage)
         {
+            ConnectionConfiguration.ExternalConnection.ConnectorId = connectionMessage.ConnectorId;
             await _graphClient.External.Connections
                 .PostAsync(ConnectionConfiguration.ExternalConnection, request =>
                 {
-                    request.Headers.Add("GraphConnectors-Ticket", connectorTicket);
+                    request.Headers.Add("GraphConnectors-Ticket", connectionMessage.ConnectorTicket!);
                 });
         }
 

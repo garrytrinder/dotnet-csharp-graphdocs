@@ -27,8 +27,8 @@
     "${{BOT_ENDPOINT}}"
   ],
   "webApplicationInfo": {
-    "id": "${{AAD_APP_CLIENT_ID}}",
-    "resource": "api://${{AAD_APP_CLIENT_ID}}"
+    "id": "${{ENTRA_APP_CLIENT_ID}}",
+    "resource": "api://${{ENTRA_APP_CLIENT_ID}}"
   },
   "graphConnector": {
     "notificationUrl": "${{BOT_ENDPOINT}}/api/notification"

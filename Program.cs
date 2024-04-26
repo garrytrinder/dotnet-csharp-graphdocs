@@ -40,6 +40,7 @@ var host = new HostBuilder()
 
             var credential = new ClientSecretCredential(tenantId, clientId, clientSecret, options);
             var handlers = GraphClientFactory.CreateDefaultHandlers();
+            handlers.Add(new DebugRequestHandler());
             var httpClient = GraphClientFactory.Create(handlers, proxy: Utils.GetWebProxy());
 
             return new GraphServiceClient(httpClient, credential);

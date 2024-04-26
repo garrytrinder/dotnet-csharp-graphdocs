@@ -19,18 +19,15 @@ namespace GraphDocsConnector
                 return _layout!;
             }
         }
-        public static ExternalConnection ExternalConnection
+
+        private static ExternalConnection _externalConnection = new ExternalConnection
         {
-            get
+            Id = "msgraphdocs",
+            Name = "Microsoft Graph documentation",
+            Description = "Documentation for Microsoft Graph API which explains what Microsoft Graph is and how to use it.",
+            ActivitySettings = new()
             {
-                return new ExternalConnection
-                {
-                    Id = "msgraphdocs",
-                    Name = "Microsoft Graph documentation",
-                    Description = "Documentation for Microsoft Graph API which explains what Microsoft Graph is and how to use it.",
-                    ActivitySettings = new()
-                    {
-                        UrlToItemResolvers = new()
+                UrlToItemResolvers = new()
                         {
                             new ItemIdResolver
                             {
@@ -63,10 +60,10 @@ namespace GraphDocsConnector
                                 Priority = 3
                             }
                         }
-                    },
-                    SearchSettings = new()
-                    {
-                        SearchResultTemplates = new()
+            },
+            SearchSettings = new()
+            {
+                SearchResultTemplates = new()
                         {
                             new()
                             {
@@ -78,18 +75,15 @@ namespace GraphDocsConnector
                                 }
                             }
                         }
-                    }
-                };
             }
-        }
-        public static Schema Schema
+        };
+
+        public static ExternalConnection ExternalConnection => _externalConnection;
+
+        private static Schema _schema = new Schema
         {
-            get
-            {
-                return new Schema
-                {
-                    BaseType = "microsoft.graph.externalItem",
-                    Properties = new()
+            BaseType = "microsoft.graph.externalItem",
+            Properties = new()
                     {
                         new Property
                         {
@@ -116,8 +110,8 @@ namespace GraphDocsConnector
                             Labels = new() { Label.Url }
                         }
                     }
-                };
-            }
-        }
+        };
+
+        public static Schema Schema => _schema;
     }
 }
