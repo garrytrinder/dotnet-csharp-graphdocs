@@ -55,7 +55,7 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <None Include=".devproxy\documents.json" />
-	  <None Include="env\samples\env.local.user" />
+	  <None Include="env\samples\.env.dev.user" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectCapability Include="TeamsFx" />

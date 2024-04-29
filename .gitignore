@@ -6,7 +6,8 @@ local.settings.json
 
 # User-specific files
 *.suo
-*.user
+#*.user
+Properties/*.user
 *.userosscache
 *.sln.docstates
 
@@ -266,5 +267,8 @@ __pycache__/
 # Teams Toolkit
 env/.env.local
 env/.env.local.user
+env/.env.dev
+env/.env.dev.user
 appPackage/build
 infra/entra/build
+deployment
