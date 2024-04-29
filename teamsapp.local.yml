@@ -11,7 +11,7 @@ provision:
     with:
       name: ${{APP_NAME}}-${{TEAMSFX_ENV}}
       generateClientSecret: true
-      signInAudience: AzureADMultipleOrgs
+      signInAudience: AzureADMyOrg
     writeToEnvironmentFile:
       clientId: ENTRA_APP_CLIENT_ID
       clientSecret: SECRET_ENTRA_APP_CLIENT_SECRET
@@ -34,8 +34,8 @@ provision:
           AzureWebJobsStorage: UseDevelopmentStorage=true
           FUNCTIONS_WORKER_RUNTIME: dotnet-isolated
           GRAPH_SCHEMA_STATUS_INTERVAL: 5
-          DocumentsApi:Url: "https://api.contoso.com"
-          DocumentsApi:Scopes: "https://api.contoso.com/Documents.Read"
+          DocumentsApi:Url: ${{DOCUMENTS_API_URL}}
+          DocumentsApi:Scopes: ${{DOCUMENTS_API_SCOPES}}
           Entra:TenantId: ${{ENTRA_APP_TENANT_ID}}
           Entra:ClientId: ${{ENTRA_APP_CLIENT_ID}}
           Entra:ClientSecret: ${{SECRET_ENTRA_APP_CLIENT_SECRET}}
@@ -66,3 +66,5 @@ provision:
     with:
       shell: powershell
       run: Write-Host "Follow -> https://admin.teams.microsoft.com/policies/manage-apps/${{TEAMS_APP_PUBLISHED_APP_ID}}"
+
+projectId: d3281538-61de-4fcb-b011-c0712759df30
