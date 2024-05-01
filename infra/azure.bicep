@@ -90,3 +90,4 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2021-01-01' = {
 }
 
 output function_app_id string = functionApp.id
+output bot_endpoint string = 'https://${functionApp.properties.defaultHostName}'
