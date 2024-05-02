@@ -91,8 +91,6 @@ namespace GraphDocsConnector.Functions
         private async Task CreateConnection(ConnectionMessage connectionMessage)
         {
             ConnectionConfiguration.ExternalConnection.ConnectorId = connectionMessage.ConnectorId;
-            // intentionally set to empty as sending null will cause an error
-            ConnectionConfiguration.ExternalConnection.AdditionalData = new Dictionary<string, object>{};
             
             await _graphClient.External.Connections
                 .PostAsync(ConnectionConfiguration.ExternalConnection, request =>

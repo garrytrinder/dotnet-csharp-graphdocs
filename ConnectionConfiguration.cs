@@ -75,7 +75,8 @@ namespace GraphDocsConnector
                                 }
                             }
                         }
-            }
+            },
+            AdditionalData = new Dictionary<string, object>()
         };
 
         public static ExternalConnection ExternalConnection => _externalConnection;
