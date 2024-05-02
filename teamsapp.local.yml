@@ -7,6 +7,12 @@ environmentFolderPath: ./env
 
 provision:
 
+  - uses: teamsApp/create
+    with:
+      name: ${{APP_NAME}}-${{TEAMSFX_ENV}}
+    writeToEnvironmentFile:
+      teamsAppId: TEAMS_APP_ID
+
   - uses: aadApp/create
     with:
       name: ${{APP_NAME}}-${{TEAMSFX_ENV}}

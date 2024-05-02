@@ -7,6 +7,12 @@ environmentFolderPath: ./env
 
 provision:
 
+  - uses: teamsApp/create
+    with:
+      name: ${{APP_NAME}}-${{TEAMSFX_ENV}}
+    writeToEnvironmentFile:
+      teamsAppId: TEAMS_APP_ID
+
   - uses: aadApp/create
     with:
       name: ${{APP_NAME}}-${{TEAMSFX_ENV}}
@@ -37,11 +43,11 @@ provision:
 
   - uses: teamsApp/validateManifest
     with:
-      manifestPath: ./appPackage/manifest.${{TEAMSFX_ENV}}.json
+      manifestPath: ./appPackage/manifest.json
 
   - uses: teamsApp/zipAppPackage
     with:
-      manifestPath: ./appPackage/manifest.${{TEAMSFX_ENV}}.json
+      manifestPath: ./appPackage/manifest.json
       outputZipPath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
       outputJsonPath: ./appPackage/build/manifest.${{TEAMSFX_ENV}}.json
 
