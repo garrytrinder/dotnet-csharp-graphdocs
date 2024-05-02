@@ -15,7 +15,7 @@ This sample project uses Teams Toolkit for Visual Studio to simplify the process
 
 Version|Date|Comments
 -------|----|--------
-1.0|May 1, 2023|Initial release
+1.0|May 2, 2024|Initial release
 
 ## Prerequisites
 
@@ -42,11 +42,15 @@ Version|Date|Comments
 
 ### 4. Start Dev Proxy and simulate webhook notification
 
-- Wait for the Azure Functions host to start (you will see errors in the debug terminal, this is expected)
-- Open a terminal, run `devproxy` to start Dev Proxy
-- Press <kbd>w</kbd> to simulate a webhook notification from Microsoft 365
+- Open a terminal, run `devproxy` to start Dev Proxy which will mock responses from Microsoft 365 and simulate the custom API
+- Press <kbd>w</kbd> to simulate a webhook notification from Microsoft 365 to simulate the setup process which includes:
+  - creating an external connection
+  - provisioning the schema
+  - importing external content
 
-## Debug against a real Microsoft 365 tenant
+> TIP: To monitor the activity check out the output of the Azure Functions host in the terminal window. You'll see the status of the different activities as they are completed.
+
+## Debug locally against a real Microsoft 365 tenant
 
 ### 1. Project setup
 
@@ -80,7 +84,7 @@ Version|Date|Comments
 
 ### 5. Start Dev Proxy
 
-- Open a terminal, run `devproxy --config-file docuemntsapirc.json` to start Dev Proxy
+- Open a terminal, run `devproxy --config-file docuemntsapirc.json` to start Dev Proxy and simulate the custom API
 
 ### 6. Enable Graph connector
 
@@ -127,7 +131,7 @@ When the process is complete you will see a table confirming that the connection
 - In the `Review the result type settings` panel, select `Update Result Type`
 - Wait a few minutes for the changes to be applied
 
-### 8. Test search
+### 9. Test search
 
 - Navigate to [Microsoft365.com](https://www.microsoft365.com)
 - Enter `paging` into the search bar
@@ -135,7 +139,9 @@ When the process is complete you will see a table confirming that the connection
 
 ![Markdown content from custom API displayed in Microsoft Search](./assets/content.png)
 
-## Deploy to Azure
+## Deploy to Azure and test against a real Microsoft 365 tenant
+
+> This path assumes that you are deploying the Graph connector to an environment that doesn't already contain a connection with the ID `msgraphdocs` and that you have provisioned your own custom API and protected it with Microsoft Entra ID authentication.
 
 ### 1. Update custom API endpoint
 
@@ -177,6 +183,35 @@ When the process is complete you will see a table confirming that the connection
 The process will take several minutes in total. During this time you may see an error message on this page, however this can be ignored and you can refresh the page to check on the status.
 
 When the process is complete you will see a table confirming that the connection has been successful.
+
+### 5. Include data in results
+
+- In the web browser navigate to the [Microsoft 365 admin center](https://admin.microsoft.com/)
+- From the side navigation, open [Settings > Search & Intelligence](https://admin.microsoft.com/?source=applauncher#/MicrosoftSearch)
+- On the page, navigate to the [Data Sources](https://admin.microsoft.com/?source=applauncher#/MicrosoftSearch/connectors) tab
+- A table will display available connections. In the **Required actions** column, select the link to **Include Connector Results** and confirm the prompt
+
+### 6. Refresh the Result Type template
+
+> There is a known issue whereby applying a result type programmatically results in a card that does not display correctly, so we need to apply the card in the user interface
+
+- In Visual Studio, open the `resultLayout.json` file and copy its contents to clipboard (<kdb>CTRL</kdb>+ <kbd>A</kbd> then <kbd>CTRL</kbd> + <kbd>C</kbd> on Windows, <kbd>CMD</kbd> + <kbd>A</kbd> then <kbd>CMD</kbd> + <kbd>C</kbd> on macOS)
+- In the web browser, in the Microsoft 365 admin center, navigate to the [Settings > Search & Intelligence](https://admin.microsoft.com/?source=applauncher#/MicrosoftSearch) area
+- Activate the [Customizations](https://admin.microsoft.com/?source=applauncher#/MicrosoftSearch/connectors) tab
+- Select the [Result Types](https://admin.microsoft.com/?source=applauncher#/MicrosoftSearch/resulttypes) page
+- In the table, check the box to select the `msgraphdocs` result type
+- On the command bar, select `Edit` to open the `msgraphdocs` side panel
+- In the `Result layout` section, underneath the text field, select `Edit` to open the `Design your layout` panel.
+- In the `Paste the JSON script that you created with Layout Designer` field, replace the contents of the field by pasting the contents of your clipboard (<kbd>CTRL</kbd> + <kbd>V</kbd> on Windows, <kbd>CMD</kbd> + <kbd>V</kbd> on macOS)
+- Confirm the changes by selecting `Next`
+- In the `Review the result type settings` panel, select `Update Result Type`
+- Wait a few minutes for the changes to be applied
+
+### 7. Test search
+
+- Navigate to [Microsoft365.com](https://www.microsoft365.com)
+- Enter `paging` into the search bar
+- Items will be shown from the data ingested by the Graph connector in the search results
 
 ## Features
 
