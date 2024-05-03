@@ -15,14 +15,20 @@ This sample project uses Teams Toolkit for Visual Studio to simplify the process
 
 Version|Date|Comments
 -------|----|--------
-1.0|May 2, 2024|Initial release
+1.0|May 3, 2024|Initial release
 
 ## Prerequisites
 
-- [Teams Toolkit for Visual Studio](https://marketplace.visualstudio.com/items?itemName=TeamsDevApp.ms-teams-vscode-extension)
-- [Microsoft 365 Developer tenant](https://developer.microsoft.com/microsoft-365/dev-program) with [uploading custom apps enabled](https://learn.microsoft.com/microsoftteams/platform/m365-apps/prerequisites#prepare-a-developer-tenant-for-testing)
+- Visual Studio 2022 17.9.6+ with the **ASP.NET and web development** workload and **Microsoft Teams development tools**
+- [Microsoft 365 Developer tenant](https://developer.microsoft.com/microsoft-365/dev-program) with [uploading custom apps enabled](https://learn.microsoft.com/microsoftteams/platform/m365-apps/prerequisites#prepare-a-developer-tenant-for-testing) (optional, only if you want to test the sample on a Microsoft 365 tenant)
 
 ## Minimal path to awesome
+
+You can run this sample in three ways:
+
+1. **Simulated debugging with Dev Proxy** where you can test your code locally without deploying any resource to Azure and Microsoft 365.
+1. **Debug locally against a Microsoft 365 tenant** where you package the project as a Teams app and deploy it to Microsoft 365. You run the Graph connector locally and expose it across the internet using a dev tunnel.
+1. **Deploy to Azure and test against a Microsoft 365 tenant** which is what you'd do when you're ready to deploy your Graph connector to production.
 
 ## Simulated debugging with Dev Proxy
 
@@ -42,7 +48,8 @@ Version|Date|Comments
 
 ### 4. Start Dev Proxy and simulate webhook notification
 
-- Open a terminal, run `devproxy` to start Dev Proxy which will mock responses from Microsoft 365 and simulate the custom API
+- Open a command prompt and change the working directory to the project directory
+- Run `devproxy` to start Dev Proxy which will mock responses from Microsoft 365 and simulate the custom API
 - Press <kbd>w</kbd> to simulate a webhook notification from Microsoft 365 to simulate the setup process which includes:
   - creating an external connection
   - provisioning the schema
@@ -84,7 +91,8 @@ Version|Date|Comments
 
 ### 5. Start Dev Proxy
 
-- Open a terminal, run `devproxy --config-file docuemntsapirc.json` to start Dev Proxy and simulate the custom API
+- Open a command prompt and change the working directory to the project directory
+- Run `devproxy --config-file documentsapirc.json` to start Dev Proxy and simulate the custom API
 
 ### 6. Enable Graph connector
 
